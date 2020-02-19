@@ -26,10 +26,11 @@ int main(int argc, char *argv[]) {
 	if (argc >= 3) {
 		if ( isdigit( argv[2][0] ) ) {
 			id = argv[2];
+//			id = "666";
 		}
 	}
 
-	printf("You entered details NTHREADS = %d, ID = %s", nthreads, id);
+	printf("You entered details NTHREADS = %d, ID = %s\n", nthreads, id.c_str());
 
 	/* START THE PROCESS */
 	/* READ FROM STDIN AND PERFORM THE TASKS */
