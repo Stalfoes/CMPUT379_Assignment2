@@ -16,7 +16,7 @@ extern "C" {
 
 using namespace std;
 
-atomic<bool> * asking_for_work;	// Atomic objects used by the producer to see if everything is done
+// atomic<bool> * asking_for_work;	// Atomic objects used by the producer to see if everything is done
 								// Used to make sure a safe exit occurs
 mutex printing_mutex;			// Used to control who is printing and who is waiting to print
 mutex work_queue_mutex;			// Used to control who is accessing the queue for work
@@ -51,16 +51,16 @@ int main(int argc, char *argv[]) {
 	/* START OF PRODCON */
 	/* SPAWN THE CONSUMER THREADS AND SAVE THEIR STATES */
 
-	asking_for_work = new atomic<bool>[nthreads];
+	// asking_for_work = new atomic<bool>[nthreads];
 
-	for (int i = 0; i < nthreads; i++) {
+	/*for (int i = 0; i < nthreads; i++) {
 		asking_for_work[i].store(false, memory_order_release);
-	}
+	}*/
 
-	thread consumers[nthreads];
+	vector<thread> consumers;
 
 	for (int i = 0; i < nthreads; i++) {
-		consumers[i] = thread(thread_method, i);
+		consumers.push_back(thread(thread_method, i));
 	}
 
 	for (int i = 0; i < nthreads; i++) {
