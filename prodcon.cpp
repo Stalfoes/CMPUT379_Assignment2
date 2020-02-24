@@ -57,10 +57,10 @@ int main(int argc, char *argv[]) {
 		asking_for_work[i].store(false, memory_order_release);
 	}*/
 
-	vector<thread> consumers;
+	thread consumers[nthreads];
 
 	for (int i = 0; i < nthreads; i++) {
-		consumers.push_back(thread(thread_method, i));
+		consumers[i] = thread(thread_method, i);
 	}
 
 	for (int i = 0; i < nthreads; i++) {
