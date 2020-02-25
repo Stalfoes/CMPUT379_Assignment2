@@ -9,11 +9,13 @@
 #include <mutex>
 #include <ctime>
 
+#include "tands.h"
+
 /* Declare the external C file's functions */
-extern "C" {
+/*extern "C" {
 	void Trans(int n);
 	void Sleep(int n);
-};
+};*/
 
 using namespace std;
 
@@ -61,7 +63,7 @@ void thread_method(int id) {
 
 		dt = ((float)(clock() - program_start)) / CLOCKS_PER_SEC;
 		printing_mutex.lock();				// PRINT THAT WE COMPLETED WORK
-		printf("%.3f ID= %d Q= %d Complete    %d\n", dt, id, nq, work);
+		printf("%.3f ID= %d      Complete    %d\n", dt, id, work);
 		printing_mutex.unlock();
 
 		break;
@@ -92,14 +94,14 @@ int main(int argc, char *argv[]) {
 	/* START OF PRODCON */
 	/* SPAWN THE CONSUMER THREADS AND SAVE THEIR STATES */
 
-	work_queue.push(1); work_queue.push(2); work_queue.push(3); work_queue.push(4); work_queue.push(5);
+	work_queue.push(100); work_queue.push(2); work_queue.push(3); work_queue.push(4); work_queue.push(5);
 
 	program_start = clock();
 
 	thread consumers[nthreads];
 
 	for (int i = 0; i < nthreads; i++) {
-		consumers[i] = thread(thread_method, i);
+		consumers[i] = thread(thread_method, i + 1);
 	}
 
 	for (int i = 0; i < nthreads; i++) {
