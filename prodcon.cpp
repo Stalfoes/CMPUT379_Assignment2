@@ -8,14 +8,9 @@
 #include <atomic>
 #include <mutex>
 #include <ctime>
+#include <condition_variable>
 
 #include "tands.h"
-
-/* Declare the external C file's functions */
-/*extern "C" {
-	void Trans(int n);
-	void Sleep(int n);
-};*/
 
 using namespace std;
 
@@ -23,9 +18,23 @@ using namespace std;
 
 clock_t program_start;
 
+/* condition_variable 's used to control the mutex's such that they wait for a condition */
+condition_variable queue_not_full_cv;
+condition_variable queue_not_empty_cv;
+
 mutex printing_mutex;			// Used to control who is printing and who is waiting to print
 mutex work_queue_mutex;			// Used to control who is accessing the queue for work
 queue<int> work_queue;			// The queue for the work
+
+const int nthreads;
+
+bool queue_is_not_full() {
+	return work_queue.size() < (2 * nthreads);
+}
+
+bool queue_is_not_empty() {
+	return work_queue.size() > 0;
+}
 
 void thread_method(int id) {
 
@@ -40,7 +49,7 @@ void thread_method(int id) {
 
 		// RECEIVE
 
-		work_queue_mutex.lock();			// ACCESS THE QUEUE
+		queue_not_empty_cv.wait(work_queue_mutex, queue_is_not_empty);			// ACCESS THE QUEUE
 		int work = work_queue.front();
 		if (work == NO_MORE_WORK) { 		// Leave the thread if we've been instructed to quit
 			work_queue_mutex.unlock();
@@ -48,6 +57,7 @@ void thread_method(int id) {
 		}
 		work_queue.pop();
 		const int nq = work_queue.size();
+		queue_not_full_cv.notify_one();			// Notify that the queue is no longer full to the producer
 		work_queue_mutex.unlock();
 
 		dt = ((float)(clock() - program_start)) / CLOCKS_PER_SEC;
@@ -80,7 +90,7 @@ int main(int argc, char *argv[]) {
 		return 1;
 	}
 
-	const int nthreads = atoi(argv[1]);
+	nthreads = atoi(argv[1]);
 	string id = "0";
 
 	if (argc >= 3) {
