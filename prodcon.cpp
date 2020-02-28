@@ -49,7 +49,8 @@ void thread_method(int id) {
 
 		// RECEIVE
 
-		queue_not_empty_cv.wait(work_queue_mutex, queue_is_not_empty);			// ACCESS THE QUEUE
+		unique_lock<mutex> lk(work_queue_mutex);
+		queue_not_empty_cv.wait(lk, queue_is_not_empty);			// ACCESS THE QUEUE
 		int work = work_queue.front();
 		if (work == NO_MORE_WORK) { 		// Leave the thread if we've been instructed to quit
 			work_queue_mutex.unlock();
