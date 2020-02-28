@@ -11,6 +11,7 @@ using namespace std;
 
 class Buffer {
 public:
+	Buffer() : Buffer(100) { }
 	Buffer(int max_size) : max_size(max_size) { }
 	~Buffer() { }
 

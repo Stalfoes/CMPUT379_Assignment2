@@ -82,6 +82,7 @@ int main(int argc, char *argv[]) {
 	/* START OF PRODCON */
 	/* SPAWN THE CONSUMER THREADS AND SAVE THEIR STATES */
 
+	buffer = Buffer(2 * nthreads);
 	buffer.push(100); buffer.push(2); buffer.push(3); buffer.push(4); buffer.push(5);
 
 	program_start = clock();
