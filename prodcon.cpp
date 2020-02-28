@@ -97,23 +97,32 @@ int main(int argc, char *argv[]) {
 	// Get input from stdin
 	string line;
 	char input[MAX_LINE_LENGTH];
+	int nq;
 	// char c[1] = '\0';
 	while (fgets(input, MAX_LINE_LENGTH, stdin) != NULL) {
-		
-		/*while (strcmp(c, 1, '\n') == false) {
-			line.append(c);
-		}*/
+				
 		line = input;
 		
-		string amount_s = line.substr(1, line.length() - 1);
-		int amount = stoi(amount_s.c_str());
+		// string amount_s = line.substr(1);
+		int amount = stoi(line.substr(1));
 		string work_type = line.substr(0, 1);
 
+		float dt;		
+
+		if (work_type.compare("T") == 0) {
+			dt = ((float)(clock() - program_start)) / CLOCKS_PER_SEC;	
+			printing_mutex.lock();
+			printf("%.3f ID= 0 Q= %d Work        %d", dt, nq, amount);
+			printing_mutex.unlock();
+		}
+		//buffer.push(amount, nq);
+
 		printing_mutex.lock();
-		printf("PRODUCER - Type: %s, Amount: %s -> %d\n", work_type.c_str(), amount_s.c_str(), amount);
+		printf("PRODUCER - Type: %s -> %s, Amount: %d\n", work_type.c_str(), type.c_str(), amount);
 		printing_mutex.unlock();
 
 	}
+
 
 	/*
 	int amount = stoi(line.substr(1));
@@ -124,7 +133,7 @@ int main(int argc, char *argv[]) {
 	} else if (strcmp(work_type)	
 	*/
 
-	buffer.push(NO_MORE_WORK);
+	buffer.push(NO_MORE_WORK, nq);
 	for (int i = 0; i < nthreads; i++) {
 		consumers[i].join();
 	}

@@ -15,10 +15,11 @@ public:
 	Buffer(int max_size) : max_size(max_size) { }
 	~Buffer() { }
 
-	void push(int work) {
+	void push(int work, int& len) {
 		unique_lock<mutex> lk(lock);
 		cv.wait(lk, [this]() { return !isFull(); } );
 		work_queue.push(work);
+		len = work_queue.size();
 		lk.unlock();
 		cv.notify_all();
 	}
