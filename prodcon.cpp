@@ -54,7 +54,7 @@ void thread_method(int id) {
 		printf("%.3f ID= %d      Complete    %d\n", dt, id, work);
 		printing_mutex.unlock();
 
-		break;
+//		break;
 
 	}
 }
@@ -84,6 +84,7 @@ int main(int argc, char *argv[]) {
 
 	buffer.resize(2 * nthreads);
 	buffer.push(100); buffer.push(2); buffer.push(3); buffer.push(4); buffer.push(5);
+	buffer.push(NO_MORE_WORK);
 
 	program_start = clock();
 
