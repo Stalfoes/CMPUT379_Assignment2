@@ -22,12 +22,13 @@ public:
 		cv.notify_all();
 	}
 
-	void pop(int& work) {
+	void pop(int& work, int& len) {
 		unique_lock<mutex> lk(lock);
 		cv.wait(lk, [this]() { return !isEmpty(); } );
 		work = work_queue.front();
 		if (work != NO_MORE_WORK)
 			work_queue.pop();
+		len = work_queue.size();
 		lk.unlock();
 		cv.notify_all();	
 	}
