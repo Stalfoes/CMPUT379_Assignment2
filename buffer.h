@@ -11,7 +11,7 @@ using namespace std;
 
 class Buffer {
 public:
-	Buffer() : Buffer(100) { }
+	Buffer() : Buffer(-1) { }
 	Buffer(int max_size) : max_size(max_size) { }
 	~Buffer() { }
 
@@ -32,6 +32,13 @@ public:
 		len = work_queue.size();
 		lk.unlock();
 		cv.notify_all();	
+	}
+
+	/* Following method only intended to be used once, for initialization */
+	void resize(int s) {
+		lock.lock();
+		max_size = s;
+		lock.unlock();
 	}
 
 private:
