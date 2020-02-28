@@ -26,7 +26,7 @@ mutex printing_mutex;			// Used to control who is printing and who is waiting to
 mutex work_queue_mutex;			// Used to control who is accessing the queue for work
 queue<int> work_queue;			// The queue for the work
 
-const int nthreads;
+int nthreads;
 
 bool queue_is_not_full() {
 	return work_queue.size() < (2 * nthreads);
