@@ -14,6 +14,8 @@
 
 using namespace std;
 
+#define MAX_LINE_LENGTH 10
+
 clock_t program_start;
 
 Buffer buffer;
@@ -54,8 +56,6 @@ void thread_method(int id) {
 		printf("%.3f ID= %d      Complete    %d\n", dt, id, work);
 		printing_mutex.unlock();
 
-//		break;
-
 	}
 }
 
@@ -83,8 +83,8 @@ int main(int argc, char *argv[]) {
 	/* SPAWN THE CONSUMER THREADS AND SAVE THEIR STATES */
 
 	buffer.resize(2 * nthreads);
-	buffer.push(100); buffer.push(2); buffer.push(3); buffer.push(4); buffer.push(5);
-	buffer.push(NO_MORE_WORK);
+	// buffer.push(100); buffer.push(2); buffer.push(3); buffer.push(4); buffer.push(5);
+	// buffer.push(NO_MORE_WORK);
 
 	program_start = clock();
 
@@ -94,6 +94,37 @@ int main(int argc, char *argv[]) {
 		consumers[i] = thread(thread_method, i + 1);
 	}
 
+	// Get input from stdin
+	string line;
+	char input[MAX_LINE_LENGTH];
+	// char c[1] = '\0';
+	while (fgets(input, MAX_LINE_LENGTH, stdin) != NULL) {
+		
+		/*while (strcmp(c, 1, '\n') == false) {
+			line.append(c);
+		}*/
+		line = input;
+		
+		string amount_s = line.substr(1, line.length() - 1);
+		int amount = stoi(amount_s.c_str());
+		string work_type = line.substr(0, 1);
+
+		printing_mutex.lock();
+		printf("PRODUCER - Type: %s, Amount: %s -> %d\n", work_type.c_str(), amount_s.c_str(), amount);
+		printing_mutex.unlock();
+
+	}
+
+	/*
+	int amount = stoi(line.substr(1));
+	string work_type = line.substr(0, 1);
+
+	if (strcmp(work_type, "T")) {
+		
+	} else if (strcmp(work_type)	
+	*/
+
+	buffer.push(NO_MORE_WORK);
 	for (int i = 0; i < nthreads; i++) {
 		consumers[i].join();
 	}
