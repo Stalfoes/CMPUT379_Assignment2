@@ -28,9 +28,9 @@ void thread_method(int id) {
 	while (true) {
 
 		// ASK
-
+		
+		printing_mutex.lock();
 		float dt = ((float)(clock() - program_start)) / CLOCKS_PER_SEC;	// Calculate the time we're at
-		printing_mutex.lock();				// PRINT THAT WE'RE ASKING FOR WORK
 		printf("%.3f ID= %d      Ask\n", dt, id);
 		printing_mutex.unlock();
 
@@ -40,8 +40,8 @@ void thread_method(int id) {
 		buffer.pop(work, nq);
 		if (work == NO_MORE_WORK) break;
 
+		printing_mutex.lock();
 		dt = ((float)(clock() - program_start)) / CLOCKS_PER_SEC;
-		printing_mutex.lock();				// PRINT THAT WE RECEIVED WORK
 		printf("%.3f ID= %d Q= %d Receive     %d\n", dt, id, nq, work);
 		printing_mutex.unlock();
 
@@ -51,8 +51,8 @@ void thread_method(int id) {
 
 		// COMPLETE
 
+		printing_mutex.lock();
 		dt = ((float)(clock() - program_start)) / CLOCKS_PER_SEC;
-		printing_mutex.lock();				// PRINT THAT WE COMPLETED WORK
 		printf("%.3f ID= %d      Complete    %d\n", dt, id, work);
 		printing_mutex.unlock();
 
@@ -110,16 +110,26 @@ int main(int argc, char *argv[]) {
 		float dt;		
 
 		if (work_type.compare("T") == 0) {
-			dt = ((float)(clock() - program_start)) / CLOCKS_PER_SEC;	
+
+			buffer.push(amount, nq);
+	
 			printing_mutex.lock();
-			printf("%.3f ID= 0 Q= %d Work        %d", dt, nq, amount);
+			dt = ((float)(clock() - program_start)) / CLOCKS_PER_SEC;
+			printf("%.3f ID= 0 Q= %d Work        %d\n", dt, nq, amount);
 			printing_mutex.unlock();
+		} else {
+			printing_mutex.lock();
+			dt = ((float)(clock() - program_start)) / CLOCKS_PER_SEC;
+			printf("%.3f ID= 0      Sleep       %d\n", dt, amount);
+			printing_mutex.unlock();
+
+			Sleep(amount);
 		}
 		//buffer.push(amount, nq);
 
-		printing_mutex.lock();
+		/*printing_mutex.lock();
 		printf("PRODUCER - Type: %s -> %s, Amount: %d\n", work_type.c_str(), type.c_str(), amount);
-		printing_mutex.unlock();
+		printing_mutex.unlock();*/
 
 	}
 
@@ -138,7 +148,7 @@ int main(int argc, char *argv[]) {
 		consumers[i].join();
 	}
 
-	printf("PROGRAM END\n");
+	// printf("PROGRAM END\n");
 
 	return 0;
 }
