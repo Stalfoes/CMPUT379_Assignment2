@@ -8,6 +8,7 @@
 #include <atomic>
 #include <mutex>
 #include <ctime>
+#include <vector>
 
 #include "tands.h"
 #include "buffer.h"	// Buffer
@@ -23,6 +24,13 @@ Buffer buffer;
 mutex printing_mutex;			// Used to control who is printing and who is waiting to print
 int nthreads;
 
+/* atomic objects to store summary information */
+int nWork = 0, nAsk = 0, nReceive = 0, nComplete = 0, nSleep = 0;
+vector<int> workTaken;
+
+//mutex tttMutex;		// for atomic totalTimeTaken. Can't use atomic<float> as we need to do more than one operation at a time
+//float totalTimeTaken;
+
 void thread_method(int id) {
 
 	while (true) {
@@ -31,9 +39,16 @@ void thread_method(int id) {
 		
 		printing_mutex.lock();
 		float dt = ((float)(clock() - program_start)) / CLOCKS_PER_SEC;	// Calculate the time we're at
-		printf("%.3f ID= %d      Ask\n", dt, id);
+		printf("%8.3f ID= %d      Ask\n", dt, id);
 		printing_mutex.unlock();
+		nAsk++;
 
+		// The last time in execution will always occur after an ask command on the consumer side
+		// Only other possibility is a producer waking from a sleep
+/*		tttMutex.lock();
+		if (dt > totalTimeTaken) totalTimeTaken = dt;
+		tttMutex.unlock();
+*/
 		// RECEIVE
 
 		int work, nq;
@@ -42,8 +57,10 @@ void thread_method(int id) {
 
 		printing_mutex.lock();
 		dt = ((float)(clock() - program_start)) / CLOCKS_PER_SEC;
-		printf("%.3f ID= %d Q= %d Receive     %d\n", dt, id, nq, work);
+		printf("%8.3f ID= %d Q= %d Receive %5d\n", dt, id, nq, work);
 		printing_mutex.unlock();
+		nReceive++;
+		workTaken[id - 1]++;		
 
 		// WORK
 
@@ -53,8 +70,9 @@ void thread_method(int id) {
 
 		printing_mutex.lock();
 		dt = ((float)(clock() - program_start)) / CLOCKS_PER_SEC;
-		printf("%.3f ID= %d      Complete    %d\n", dt, id, work);
+		printf("%8.3f ID= %d      Complete %4d\n", dt, id, work);
 		printing_mutex.unlock();
+		nComplete++;
 
 	}
 }
@@ -82,6 +100,8 @@ int main(int argc, char *argv[]) {
 	/* START OF PRODCON */
 	/* SPAWN THE CONSUMER THREADS AND SAVE THEIR STATES */
 
+	workTaken.resize(nthreads);
+
 	buffer.resize(2 * nthreads);
 	// buffer.push(100); buffer.push(2); buffer.push(3); buffer.push(4); buffer.push(5);
 	// buffer.push(NO_MORE_WORK);
@@ -91,6 +111,7 @@ int main(int argc, char *argv[]) {
 	thread consumers[nthreads];
 
 	for (int i = 0; i < nthreads; i++) {
+		workTaken[i] = 0;
 		consumers[i] = thread(thread_method, i + 1);
 	}
 
@@ -115,15 +136,20 @@ int main(int argc, char *argv[]) {
 	
 			printing_mutex.lock();
 			dt = ((float)(clock() - program_start)) / CLOCKS_PER_SEC;
-			printf("%.3f ID= 0 Q= %d Work        %d\n", dt, nq, amount);
+			printf("%8.3f ID= 0 Q= %d Work %8d\n", dt, nq, amount);
 			printing_mutex.unlock();
+			nWork++;
+
 		} else {
+
 			printing_mutex.lock();
 			dt = ((float)(clock() - program_start)) / CLOCKS_PER_SEC;
-			printf("%.3f ID= 0      Sleep       %d\n", dt, amount);
+			printf("%8.3f ID= 0      Sleep %7d\n", dt, amount);
 			printing_mutex.unlock();
 
 			Sleep(amount);
+
+			nSleep++;
 		}
 		//buffer.push(amount, nq);
 
@@ -132,7 +158,6 @@ int main(int argc, char *argv[]) {
 		printing_mutex.unlock();*/
 
 	}
-
 
 	/*
 	int amount = stoi(line.substr(1));
@@ -147,6 +172,24 @@ int main(int argc, char *argv[]) {
 	for (int i = 0; i < nthreads; i++) {
 		consumers[i].join();
 	}
+
+	// Producer uses the total time as the time when all the threads have shut down
+	// Causes a slight descepancy between what is printed and what is calculated
+	float finalTime = ((float)(clock() - program_start)) / CLOCKS_PER_SEC;
+
+	printf("Summary:\n");
+	printf("   Work %9d\n", nWork);
+	printf("   Ask %10d\n", nAsk);
+	printf("   Receive %6d\n", nReceive);
+	printf("   Complete %5d\n", nComplete);
+	printf("   Sleep %8d\n", nSleep);
+	
+	for (int i = 0; i < nthreads; i++) {
+		printf("   Thread %2d %4d\n", i+1, workTaken[i]);
+	}
+
+//	printf("Final time= %f\n", finalTime);
+	printf("Transactions per second: %.2f\n", nComplete / finalTime);
 
 	// printf("PROGRAM END\n");
 

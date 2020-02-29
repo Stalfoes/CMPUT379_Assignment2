@@ -12,14 +12,16 @@ using namespace std;
 class Buffer {
 public:
 	Buffer() : Buffer(-1) { }
-	Buffer(int max_size) : max_size(max_size) { }
+	Buffer(int max_size) : max_size(max_size), no_more_work_added(false) { }
 	~Buffer() { }
 
 	void push(int work, int& len) {
 		unique_lock<mutex> lk(lock);
 		cv.wait(lk, [this]() { return !isFull(); } );
 		work_queue.push(work);
-		len = work_queue.size();
+		if (work == NO_MORE_WORK)
+			no_more_work_added = true;
+		len = length();
 		lk.unlock();
 		cv.notify_all();
 	}
@@ -30,7 +32,7 @@ public:
 		work = work_queue.front();
 		if (work != NO_MORE_WORK)
 			work_queue.pop();
-		len = work_queue.size();
+		len = length();
 		lk.unlock();
 		cv.notify_all();	
 	}
@@ -52,6 +54,14 @@ private:
 		return work_queue.size() == 0;
 	}
 
+	int length() const {
+		int len = work_queue.size();		
+		if (no_more_work_added == true)
+			len--;
+		return len;
+	}
+
+	bool no_more_work_added;
 	int max_size;
 	mutex lock;
 	queue<int> work_queue;
