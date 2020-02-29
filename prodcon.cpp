@@ -178,14 +178,14 @@ int main(int argc, char *argv[]) {
 	float finalTime = ((float)(clock() - program_start)) / CLOCKS_PER_SEC;
 
 	printf("Summary:\n");
-	printf("   Work %9d\n", nWork);
-	printf("   Ask %10d\n", nAsk);
-	printf("   Receive %6d\n", nReceive);
-	printf("   Complete %5d\n", nComplete);
-	printf("   Sleep %8d\n", nSleep);
+	printf("    Work %9d\n", nWork);
+	printf("    Ask %10d\n", nAsk);
+	printf("    Receive %6d\n", nReceive);
+	printf("    Complete %5d\n", nComplete);
+	printf("    Sleep %8d\n", nSleep);
 	
 	for (int i = 0; i < nthreads; i++) {
-		printf("   Thread %2d %4d\n", i+1, workTaken[i]);
+		printf("    Thread %2d %4d\n", i+1, workTaken[i]);
 	}
 
 //	printf("Final time= %f\n", finalTime);
