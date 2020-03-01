@@ -108,7 +108,7 @@ int main(int argc, char *argv[]) {
 		output_file_name += id + ".";
 	}
 	output_file_name += "log";
-	printf("Output file: %s", output_file_name.c_str());
+	// printf("Output file: %s", output_file_name.c_str());
 	outputFile = fopen(output_file_name.c_str(), "w");
 
 	// printf("You entered details NTHREADS = %d, ID = %s\n", nthreads, id.c_str());
