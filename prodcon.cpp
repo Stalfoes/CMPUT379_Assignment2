@@ -17,7 +17,7 @@ using namespace std;
 
 #define MAX_LINE_LENGTH 10
 
-clock_t program_start;
+chrono::milliseconds program_start;
 
 Buffer buffer;
 
@@ -31,6 +31,13 @@ vector<int> workTaken;
 //mutex tttMutex;		// for atomic totalTimeTaken. Can't use atomic<float> as we need to do more than one operation at a time
 //float totalTimeTaken;
 
+float dTime() {
+	chrono::milliseconds dt_ms = chrono::duration_cast<chrono::milliseconds> ( 
+		chrono::system_clock::now().time_since_epoch()
+	) - program_start;	// Calculate the time we're at
+	return ((float) dt_ms.count()) / 1000;
+}
+
 void thread_method(int id) {
 
 	while (true) {
@@ -38,8 +45,7 @@ void thread_method(int id) {
 		// ASK
 		
 		printing_mutex.lock();
-		float dt = ((float)(clock() - program_start)) / CLOCKS_PER_SEC;	// Calculate the time we're at
-		printf("%8.3f ID= %d      Ask\n", dt, id);
+		printf("%8.3f ID= %d      Ask\n", dTime(), id);
 		printing_mutex.unlock();
 		nAsk++;
 
@@ -56,8 +62,7 @@ void thread_method(int id) {
 		if (work == NO_MORE_WORK) break;
 
 		printing_mutex.lock();
-		dt = ((float)(clock() - program_start)) / CLOCKS_PER_SEC;
-		printf("%8.3f ID= %d Q= %d Receive %5d\n", dt, id, nq, work);
+		printf("%8.3f ID= %d Q= %d Receive %5d\n", dTime(), id, nq, work);
 		printing_mutex.unlock();
 		nReceive++;
 		workTaken[id - 1]++;		
@@ -69,8 +74,7 @@ void thread_method(int id) {
 		// COMPLETE
 
 		printing_mutex.lock();
-		dt = ((float)(clock() - program_start)) / CLOCKS_PER_SEC;
-		printf("%8.3f ID= %d      Complete %4d\n", dt, id, work);
+		printf("%8.3f ID= %d      Complete %4d\n", dTime(), id, work);
 		printing_mutex.unlock();
 		nComplete++;
 
@@ -126,25 +130,21 @@ int main(int argc, char *argv[]) {
 		
 		// string amount_s = line.substr(1);
 		int amount = stoi(line.substr(1));
-		string work_type = line.substr(0, 1);
-
-		float dt;		
+		string work_type = line.substr(0, 1);	
 
 		if (work_type.compare("T") == 0) {
 
 			buffer.push(amount, nq);
 	
 			printing_mutex.lock();
-			dt = ((float)(clock() - program_start)) / CLOCKS_PER_SEC;
-			printf("%8.3f ID= 0 Q= %d Work %8d\n", dt, nq, amount);
+			printf("%8.3f ID= 0 Q= %d Work %8d\n", dTime(), nq, amount);
 			printing_mutex.unlock();
 			nWork++;
 
 		} else {
 
 			printing_mutex.lock();
-			dt = ((float)(clock() - program_start)) / CLOCKS_PER_SEC;
-			printf("%8.3f ID= 0      Sleep %7d\n", dt, amount);
+			printf("%8.3f ID= 0      Sleep %7d\n", dTime(), amount);
 			printing_mutex.unlock();
 
 			Sleep(amount);
@@ -175,7 +175,7 @@ int main(int argc, char *argv[]) {
 
 	// Producer uses the total time as the time when all the threads have shut down
 	// Causes a slight descepancy between what is printed and what is calculated
-	float finalTime = ((float)(clock() - program_start)) / CLOCKS_PER_SEC;
+	float finalTime = dTime();
 
 	printf("Summary:\n");
 	printf("    Work %9d\n", nWork);
