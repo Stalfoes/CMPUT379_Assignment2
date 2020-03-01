@@ -2,9 +2,6 @@ CC=g++ -std=c++11
 
 all: prodcon
 
-time: timetest.cpp
-	$(CC) timetest.cpp -o timetest -lstdc++ -lpthread
-
 prodcon: tands.o prodcon.cpp
 	$(CC) prodcon.cpp tands.o -o prodcon -lstdc++ -lpthread
 
