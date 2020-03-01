@@ -167,7 +167,7 @@ int main(int argc, char *argv[]) {
 
 	/* STOP CONSUMERS */
 	
-	buffer.push(NO_MORE_WORK, nq);				// Signal the consumers there is no more work to be done
+	buffer.signalEnd();				// Signal the consumers there is no more work to be done
 	for (int i = 0; i < nthreads; i++) {		// Wait for all consumers to complete
 		consumers[i].join();
 	}
