@@ -177,8 +177,13 @@ int main(int argc, char *argv[]) {
 	// Causes a slight descepancy between what is printed and what is calculated
 	float finalTime = dTime();
 
-	n_characters_written = sprintf(output_str, "Summary:\n    Work %9d\n    Ask %10d\n    Receive %6d\n    Complete %5d\n    Sleep %8d\n", 
-		nWork, nAsk, nReceive, nComplete, nSleep );
+	n_characters_written = sprintf(output_str, "Summary:\n    Work %9d\n", nWork);
+	fputs(output_str, outputFile);
+
+	n_characters_written = sprintf(output_str, "    Ask %10d\n    Receive %6d\n", nAsk, nReceive);
+	fputs(output_str, outputFile);
+
+	n_characters_written = sprintf(output_str, "    Complete %5d\n    Sleep %8d\n", nComplete, nSleep);
 	fputs(output_str, outputFile);
 	
 	for (int i = 0; i < nthreads; i++) {
