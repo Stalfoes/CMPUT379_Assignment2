@@ -53,6 +53,12 @@ public:
 		max_size = s;
 		lock.unlock();
 	}
+	
+	/* Used to signal the consumers it's the end of execution */
+	void signalEnd() {
+		int n;
+		push(NO_MORE_WORK, n);
+	}
 
 private:
 
