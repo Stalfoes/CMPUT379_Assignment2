@@ -33,7 +33,7 @@ vector<int> workTaken;
 
 /* Used to output to the necessary file */
 FILE* outputFile;
-char output_str[MAX_OUTPUT_LINE_LENGTH] = '\0';
+char output_str[MAX_OUTPUT_LINE_LENGTH] = "\0";
 int n_characters_written;
 
 float dTime() {
@@ -104,12 +104,12 @@ int main(int argc, char *argv[]) {
 	/* SET UP LOG FILE */
 
 	string output_file_name = "prodcon.";
-	if (strcmp(id, "0") != 0) {
+	if (id.compare("0") != 0) {
 		output_file_name += id + ".";
 	}
 	output_file_name += "log";
-	fprintf("Output file: %s", output_file_name.c_str());
-	outputFile = fopen(output_file_name.c_str(), "a");
+	printf("Output file: %s", output_file_name.c_str());
+	outputFile = fopen(output_file_name.c_str(), "w");
 
 	// printf("You entered details NTHREADS = %d, ID = %s\n", nthreads, id.c_str());
 
