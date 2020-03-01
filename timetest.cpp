@@ -9,15 +9,15 @@ int main() {
 
 	clock_t startClock = clock();
 	
-	chrono::milliseconds startTime = chrono::duration_cast<std::milliseconds> ( 
+	chrono::milliseconds startTime = chrono::duration_cast<chrono::milliseconds> ( 
 		chrono::system_clock::now().time_since_epoch()
 	);
 
 	this_thread::sleep_for(chrono::seconds(3));
 
-	float dc = ((float)(clock() - program_start)) / CLOCKS_PER_SEC;
+	float dc = ((float)(clock() - startClock)) / CLOCKS_PER_SEC;
 
-	chrono::milliseconds dt_ms = chrono::duration_cast<std::milliseconds> ( 
+	chrono::milliseconds dt_ms = chrono::duration_cast<chrono::milliseconds> ( 
 		chrono::system_clock::now().time_since_epoch()
 	) - startTime;
 
