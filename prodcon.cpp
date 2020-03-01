@@ -14,7 +14,8 @@
 
 using namespace std;
 
-#define MAX_LINE_LENGTH 10
+#define MAX_INPUT_LINE_LENGTH 10
+#define MAX_OUTPUT_LINE_LENGTH 50
 
 chrono::milliseconds program_start;
 
@@ -23,12 +24,17 @@ Buffer buffer;
 mutex printing_mutex;			// Used to control who is printing and who is waiting to print
 int nthreads;
 
-/* atomic objects to store summary information */
+/* Summary information */
 int nWork = 0, nAsk = 0, nReceive = 0, nComplete = 0, nSleep = 0;
 vector<int> workTaken;
 
 //mutex tttMutex;		// for atomic totalTimeTaken. Can't use atomic<float> as we need to do more than one operation at a time
 //float totalTimeTaken;
+
+/* Used to output to the necessary file */
+FILE* outputFile;
+char output_str[MAX_OUTPUT_LINE_LENGTH] = '\0';
+int n_characters_written;
 
 float dTime() {
 	chrono::milliseconds dt_ms = chrono::duration_cast<chrono::milliseconds> ( 
@@ -44,16 +50,11 @@ void thread_method(int id) {
 		// ASK
 		
 		printing_mutex.lock();
-		printf("%8.3f ID= %d      Ask\n", dTime(), id);
+		n_characters_written = sprintf(output_str, "%8.3f ID= %d      Ask\n", dTime(), id);
+		fputs(output_str, outputFile);
 		printing_mutex.unlock();
 		nAsk++;
 
-		// The last time in execution will always occur after an ask command on the consumer side
-		// Only other possibility is a producer waking from a sleep
-/*		tttMutex.lock();
-		if (dt > totalTimeTaken) totalTimeTaken = dt;
-		tttMutex.unlock();
-*/
 		// RECEIVE
 
 		int work, nq;
@@ -61,7 +62,8 @@ void thread_method(int id) {
 		if (work == NO_MORE_WORK) break;
 
 		printing_mutex.lock();
-		printf("%8.3f ID= %d Q= %d Receive %5d\n", dTime(), id, nq, work);
+		n_characters_written = sprintf(output_str, "%8.3f ID= %d Q= %d Receive %5d\n", dTime(), id, nq, work);
+		fputs(output_str, outputFile);
 		printing_mutex.unlock();
 		nReceive++;
 		workTaken[id - 1]++;		
@@ -73,7 +75,8 @@ void thread_method(int id) {
 		// COMPLETE
 
 		printing_mutex.lock();
-		printf("%8.3f ID= %d      Complete %4d\n", dTime(), id, work);
+		n_characters_written = sprintf(output_str, "%8.3f ID= %d      Complete %4d\n", dTime(), id, work);
+		fputs(output_str, outputFile);
 		printing_mutex.unlock();
 		nComplete++;
 
@@ -98,6 +101,16 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
+	/* SET UP LOG FILE */
+
+	string output_file_name = "prodcon.";
+	if (strcmp(id, "0") != 0) {
+		output_file_name += id + ".";
+	}
+	output_file_name += "log";
+	fprintf("Output file: %s", output_file_name.c_str());
+	outputFile = fopen(output_file_name.c_str(), "a");
+
 	// printf("You entered details NTHREADS = %d, ID = %s\n", nthreads, id.c_str());
 
 	/* START OF PRODCON */
@@ -106,8 +119,6 @@ int main(int argc, char *argv[]) {
 	workTaken.resize(nthreads);
 
 	buffer.resize(2 * nthreads);
-	// buffer.push(100); buffer.push(2); buffer.push(3); buffer.push(4); buffer.push(5);
-	// buffer.push(NO_MORE_WORK);
 
 	program_start = chrono::duration_cast<chrono::milliseconds> (
 		chrono::system_clock::now().time_since_epoch()
@@ -122,10 +133,10 @@ int main(int argc, char *argv[]) {
 
 	// Get input from stdin
 	string line;
-	char input[MAX_LINE_LENGTH];
+	char input[MAX_INPUT_LINE_LENGTH];
 	int nq;
-	// char c[1] = '\0';
-	while (fgets(input, MAX_LINE_LENGTH, stdin) != NULL) {
+
+	while (fgets(input, MAX_INPUT_LINE_LENGTH, stdin) != NULL) {
 				
 		line = input;
 		
@@ -138,36 +149,24 @@ int main(int argc, char *argv[]) {
 			buffer.push(amount, nq);
 	
 			printing_mutex.lock();
-			printf("%8.3f ID= 0 Q= %d Work %8d\n", dTime(), nq, amount);
+			n_characters_written = sprintf(output_str, "%8.3f ID= 0 Q= %d Work %8d\n", dTime(), nq, amount);
+			fputs(output_str, outputFile);
 			printing_mutex.unlock();
 			nWork++;
 
 		} else {
 
 			printing_mutex.lock();
-			printf("%8.3f ID= 0      Sleep %7d\n", dTime(), amount);
+			n_characters_written = sprintf(output_str, "%8.3f ID= 0      Sleep %7d\n", dTime(), amount);
+			fputs(output_str, outputFile);
 			printing_mutex.unlock();
 
 			Sleep(amount);
 
 			nSleep++;
 		}
-		//buffer.push(amount, nq);
-
-		/*printing_mutex.lock();
-		printf("PRODUCER - Type: %s -> %s, Amount: %d\n", work_type.c_str(), type.c_str(), amount);
-		printing_mutex.unlock();*/
 
 	}
-
-	/*
-	int amount = stoi(line.substr(1));
-	string work_type = line.substr(0, 1);
-
-	if (strcmp(work_type, "T")) {
-		
-	} else if (strcmp(work_type)	
-	*/
 
 	buffer.push(NO_MORE_WORK, nq);
 	for (int i = 0; i < nthreads; i++) {
@@ -178,21 +177,19 @@ int main(int argc, char *argv[]) {
 	// Causes a slight descepancy between what is printed and what is calculated
 	float finalTime = dTime();
 
-	printf("Summary:\n");
-	printf("    Work %9d\n", nWork);
-	printf("    Ask %10d\n", nAsk);
-	printf("    Receive %6d\n", nReceive);
-	printf("    Complete %5d\n", nComplete);
-	printf("    Sleep %8d\n", nSleep);
+	n_characters_written = sprintf(output_str, "Summary:\n    Work %9d\n    Ask %10d\n    Receive %6d\n    Complete %5d\n    Sleep %8d\n", 
+		nWork, nAsk, nReceive, nComplete, nSleep );
+	fputs(output_str, outputFile);
 	
 	for (int i = 0; i < nthreads; i++) {
-		printf("    Thread %2d %4d\n", i+1, workTaken[i]);
+		n_characters_written = sprintf(output_str, "    Thread %2d %4d\n", i+1, workTaken[i]);
+		fputs(output_str, outputFile);
 	}
 
-//	printf("Final time= %f\n", finalTime);
-	printf("Transactions per second: %.2f\n", nComplete / finalTime);
+	n_characters_written = sprintf(output_str, "Transactions per second: %.2f\n", nComplete / finalTime);
+	fputs(output_str, outputFile);
 
-	// printf("PROGRAM END\n");
+	fclose(outputFile);
 
 	return 0;
 }
