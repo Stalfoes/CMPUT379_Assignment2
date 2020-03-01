@@ -7,7 +7,6 @@
 #include <chrono>
 #include <atomic>
 #include <mutex>
-#include <ctime>
 #include <vector>
 
 #include "tands.h"
@@ -110,7 +109,9 @@ int main(int argc, char *argv[]) {
 	// buffer.push(100); buffer.push(2); buffer.push(3); buffer.push(4); buffer.push(5);
 	// buffer.push(NO_MORE_WORK);
 
-	program_start = clock();
+	program_start = chrono::duration_cast<chrono::milliseconds> (
+		chrono::system_clock::now().time_since_epoch()
+	);
 
 	thread consumers[nthreads];
 
